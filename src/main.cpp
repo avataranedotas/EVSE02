@@ -2,6 +2,10 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+//para fazer o hard_restart
+#include <esp_int_wdt.h>
+#include <esp_task_wdt.h>
+
 #define pino_leitura_amperes 34 //34 por causa do wifi
 #define pino_LED 2
 
@@ -10,11 +14,21 @@ const char *password = "zzzzzzzz";
 
 int amperes = 6;
 int amperes_ant = 0;
+int contasegundos = 0;
 
 char buffer[100];
 
 unsigned long timer1, timer2, timer3, timer4, timer5, timer6, timer7, timer8 = 0;
 unsigned long delayStart = 0;
+
+void hard_restart() {
+  esp_task_wdt_init(1,true);
+  esp_task_wdt_add(NULL);
+  while(true);
+}
+
+
+
 
 void setup()
 {
@@ -98,6 +112,13 @@ void loop()
     //desliga led
     digitalWrite(pino_LED, true);
     while ((millis() % 150)!=149) {};
+
+    contasegundos = contasegundos + 1;
+
+    if (contasegundos > 300) {
+      hard_restart();
+
+    }
 
     //se Wifi estiver ligado
     if ((WiFi.status() == WL_CONNECTED) /*& (amperes!=amperes_ant)*/)
